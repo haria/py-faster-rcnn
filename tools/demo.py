@@ -22,20 +22,44 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.io as sio
 import caffe, os, sys, cv2
-import argparse
+import argparse    
 
-CLASSES = ('__background__',
+CLASSES_VOC = ('__background__',
            'aeroplane', 'bicycle', 'bird', 'boat',
            'bottle', 'bus', 'car', 'cat', 'chair',
            'cow', 'diningtable', 'dog', 'horse',
            'motorbike', 'person', 'pottedplant',
            'sheep', 'sofa', 'train', 'tvmonitor')
 
-NETS = {'vgg16': ('VGG16',
-                  'VGG16_faster_rcnn_final.caffemodel'),
-        'zf': ('ZF',
-                  'ZF_faster_rcnn_final.caffemodel')}
+CLASSES_COCO = ('__background__',
+           'person', 'bicycle', 'car', 'motorcycle', 
+           'airplane', 'bus','train', 'truck', 'boat', 
+           'traffic light', 'fire hydrant', 'stop sign', 
+           'parking meter', 'bench', 'bird', 'cat', 
+           'dog', 'horse', 'sheep', 'cow', 
+           'elephant', 'bear', 'zebra', 'giraffe', 
+           'backpack', 'umbrella', 'handbag', 'tie', 
+           'suitcase', 'frisbee', 'skis', 'snowboard', 
+           'sports ball', 'kite', 'baseball bat', 'baseball glove', 
+           'skateboard', 'surfboard', 'tennis racket', 'bottle', 
+           'wine glass', 'cup', 'fork', 'knife', 
+           'spoon', 'bowl', 'banana', 'apple', 
+           'sandwich', 'orange', 'broccoli', 'carrot', 
+           'hot dog', 'pizza', 'donut', 'cake', 
+           'chair', 'couch', 'potted plant', 'bed', 
+           'dining table', 'toilet', 'tv', 'laptop', 
+           'mouse', 'remote', 'keyboard', 'cell phone', 
+           'microwave', 'oven', 'toaster', 'sink', 
+           'refrigerator', 'book', 'clock', 'vase', 
+           'scissors', 'teddy bear', 'hair drier', 'toothbrush')
 
+# set VOC by default
+CLASSES = CLASSES_VOC
+
+NETS = {'vgg16': ('VGG16',
+            'VGG16_faster_rcnn_final.caffemodel'),
+            'zf': ('ZF',
+            'ZF_faster_rcnn_final.caffemodel')}         
 
 def vis_detections(im, class_name, dets, thresh=0.5):
     """Draw detected bounding boxes."""
@@ -73,7 +97,7 @@ def demo(net, image_name):
     """Detect object classes in an image using pre-computed object proposals."""
 
     # Load the demo image
-    im_file = os.path.join(cfg.ROOT_DIR, 'data', 'demo', image_name)
+    im_file = os.path.join(cfg.DATA_DIR, 'demo', image_name)
     im = cv2.imread(im_file)
 
     # Detect all object classes and regress object bounds
@@ -105,22 +129,29 @@ def parse_args():
     parser.add_argument('--cpu', dest='cpu_mode',
                         help='Use CPU mode (overrides --gpu)',
                         action='store_true')
+    parser.add_argument('--dataset', dest='dataset', help='The Dataset to use',
+                        choices=["voc","coco"], default='voc')
     parser.add_argument('--net', dest='demo_net', help='Network to use [vgg16]',
                         choices=NETS.keys(), default='vgg16')
-
     args = parser.parse_args()
 
     return args
 
 if __name__ == '__main__':
     cfg.TEST.HAS_RPN = True  # Use RPN for proposals
-
     args = parse_args()
 
-    prototxt = os.path.join(cfg.ROOT_DIR, 'models', NETS[args.demo_net][0],
-                            'faster_rcnn_alt_opt', 'faster_rcnn_test.pt')
-    caffemodel = os.path.join(cfg.ROOT_DIR, 'data', 'faster_rcnn_models',
-                              NETS[args.demo_net][1])
+    if args.dataset == "voc":
+        prototxt = os.path.join(cfg.MODELS_DIR, NETS[args.demo_net][0],
+                            'faster_rcnn_alt_opt', 'faster_rcnn_test.pt') 
+        caffemodel = os.path.join(cfg.DATA_DIR, 'faster_rcnn_models',
+                              NETS[args.demo_net][1]) 
+    elif args.dataset == "coco":
+        CLASSES = CLASSES_COCO
+        prototxt = os.path.join(cfg.MODELS_DIR,"../coco", NETS[args.demo_net][0],
+                            'faster_rcnn_end2end', 'test.prototxt')   
+        caffemodel = os.path.join(cfg.DATA_DIR, 'faster_rcnn_models',
+                              "coco_vgg16_faster_rcnn_final.caffemodel")
 
     if not os.path.isfile(caffemodel):
         raise IOError(('{:s} not found.\nDid you run ./data/script/'
