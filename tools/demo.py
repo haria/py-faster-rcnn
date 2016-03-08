@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.io as sio
 import caffe, os, sys, cv2
-import argparse    
+import argparse
 
 CLASSES_VOC = ('__background__',
            'aeroplane', 'bicycle', 'bird', 'boat',
@@ -59,7 +59,7 @@ CLASSES = CLASSES_VOC
 NETS = {'vgg16': ('VGG16',
             'VGG16_faster_rcnn_final.caffemodel'),
             'zf': ('ZF',
-            'ZF_faster_rcnn_final.caffemodel')}         
+            'ZF_faster_rcnn_final.caffemodel')} 
 
 def vis_detections(im, class_name, dets, thresh=0.5):
     """Draw detected bounding boxes."""
